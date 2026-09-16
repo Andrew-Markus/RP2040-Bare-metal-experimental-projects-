@@ -1,18 +1,32 @@
-#include <stdio.h>
 #include "pico/stdlib.h"
+#include "hardware/gpio.h"
 
-int main() {
-    stdio_init_all();
+void my_callback(uint gpio, uint32_t events)
+{
+    if (gpio == 26)
+    {
+        gpio_put(21,1 );
+    }
+}
 
+int main()
+{
     gpio_init(21);
+    gpio_set_dir(21, GPIO_OUT);
 
-    volatile uint32_t *gpio_oe_set  = (volatile uint32_t *)(SIO_BASE + 0x024); // OE SET
-    volatile uint32_t * GPIO_OUT_XOR = (volatile uint32_t *)(SIO_BASE + 0x01c); // XOR
-    
-    *gpio_oe_set = (1 << 21);
-      
-    while (true) {      
-        * GPIO_OUT_XOR = (1 << 21);   
+    gpio_init(26);
+    gpio_set_dir(26, GPIO_IN);
+    gpio_pull_up(26);
+
+    gpio_set_irq_enabled_with_callback(
+        26,
+        GPIO_IRQ_EDGE_FALL,
+        true,
+        &my_callback
+    );
+
+    while (true)
+    {
         sleep_ms(500);
     }
 }
